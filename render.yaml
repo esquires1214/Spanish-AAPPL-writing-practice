@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: spanish-writing-practice
+    runtime: node
+    plan: starter            # paid instance: required for the persistent disk
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/config
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DB_FILE
+        value: /var/data/writing.db
+      - key: APP_SECRET
+        generateValue: true
+      - key: TEACHER_PASSWORD
+        sync: false          # you type this in during setup
+      - key: ANTHROPIC_API_KEY
+        sync: false          # you paste this in during setup

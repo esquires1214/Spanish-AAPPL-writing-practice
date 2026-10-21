@@ -1,0 +1,19 @@
+{
+  "name": "spanish-writing-practice",
+  "version": "1.0.0",
+  "description": "Spanish presentational writing practice with ARC-aligned AI feedback and a teacher dashboard",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js",
+    "calibrate": "node --disable-warning=ExperimentalWarning test/calibrate.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  }
+}
