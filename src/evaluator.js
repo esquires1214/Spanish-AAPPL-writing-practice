@@ -52,8 +52,20 @@ export function toStrictSchema(node) {
     if (k === 'minItems' && v > 1) continue;
     out[k] = k === 'properties' ? Object.fromEntries(Object.entries(v).map(([pk, pv]) => [pk, toStrictSchema(pv)])) : toStrictSchema(v);
   }
-  const isObject = out.type === 'object' || (Array.isArray(out.type) && out.type.includes('object'));
-  if (isObject) out.additionalProperties = false;
+  // Nullable fields: express ["string","null"] as anyOf branches, with any enum
+  // kept only on the string branch (the API rejects enums on type arrays).
+  if (Array.isArray(out.type)) {
+    const { type: types, enum: en, description, ...rest } = out;
+    const anyOf = types.map(t => {
+      if (t === 'null') return { type: 'null' };
+      const b = { type: t, ...rest };
+      if (en) b.enum = en.filter(v => v !== null);
+      if (t === 'object') b.additionalProperties = false;
+      return b;
+    });
+    return description ? { description, anyOf } : { anyOf };
+  }
+  if (out.type === 'object') out.additionalProperties = false;
   return out;
 }
 
