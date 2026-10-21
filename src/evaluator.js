@@ -40,7 +40,24 @@ function fence(text) {
   return String(text || '').replace(/<\/?\s*(student_writing|initial_version|revised_version|task_\d)\s*>/gi, '[tag removed]');
 }
 
-// ---------- Anthropic call with forced tool output ----------
+// Structured outputs accept only a subset of JSON Schema. Strip unsupported
+// constraints (length/count limits are enforced by our own validators instead)
+// and require additionalProperties:false on every object.
+export function toStrictSchema(node) {
+  if (Array.isArray(node)) return node.map(toStrictSchema);
+  if (!node || typeof node !== 'object') return node;
+  const out = {};
+  for (const [k, v] of Object.entries(node)) {
+    if (['maxLength', 'minLength', 'maxItems', 'minimum', 'maximum', 'multipleOf'].includes(k)) continue;
+    if (k === 'minItems' && v > 1) continue;
+    out[k] = k === 'properties' ? Object.fromEntries(Object.entries(v).map(([pk, pv]) => [pk, toStrictSchema(pv)])) : toStrictSchema(v);
+  }
+  const isObject = out.type === 'object' || (Array.isArray(out.type) && out.type.includes('object'));
+  if (isObject) out.additionalProperties = false;
+  return out;
+}
+
+// ---------- Anthropic call with JSON structured output ----------
 async function callTool({ system, user, tool, maxTokens = 2500 }) {
   const { key, base, model, timeoutMs } = cfg();
   if (!key) throw new EvalError('AI service is not configured on the server (ANTHROPIC_API_KEY missing).');
@@ -53,10 +70,9 @@ async function callTool({ system, user, tool, maxTokens = 2500 }) {
       signal: ctrl.signal,
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model, max_tokens: maxTokens, temperature: 0,
-        system,
-        tools: [tool],
-        tool_choice: { type: 'tool', name: tool.name },
+        model, max_tokens: maxTokens,
+        system: `${system}\n\nRespond only with JSON matching the required schema (${tool.name}: ${tool.description}).`,
+        output_config: { format: { type: 'json_schema', schema: toStrictSchema(tool.input_schema) } },
         messages: [{ role: 'user', content: user }]
       })
     });
@@ -65,12 +81,16 @@ async function callTool({ system, user, tool, maxTokens = 2500 }) {
   } finally { clearTimeout(t); }
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new EvalError(`AI service returned ${res.status}${body ? ': ' + body.slice(0, 200) : ''}`, res.status >= 500 || res.status === 429 || res.status === 529);
+    throw new EvalError(`AI service returned ${res.status}${body ? ': ' + body.slice(0, 300) : ''}`, res.status >= 500 || res.status === 429 || res.status === 529);
   }
   const data = await res.json();
-  const block = (data.content || []).find(b => b.type === 'tool_use' && b.name === tool.name);
-  if (!block || typeof block.input !== 'object') throw new EvalError('AI response did not contain structured output');
-  return block.input;
+  if (data.stop_reason === 'max_tokens') throw new EvalError('AI response was cut off (max_tokens)');
+  if (data.stop_reason === 'refusal') throw new EvalError('AI declined to produce feedback for this text');
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { throw new EvalError('AI response was not valid JSON'); }
+  if (!parsed || typeof parsed !== 'object') throw new EvalError('AI response did not contain structured output');
+  return parsed;
 }
 
 async function callValidated(args, validate) {
