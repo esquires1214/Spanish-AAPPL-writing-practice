@@ -163,3 +163,14 @@ The only dependency is Express. The database uses Node's built-in SQLite.
 - Logins are rate-limited.
 - State-changing requests need a same-origin header.
 - CSV export neutralizes spreadsheet formulas.
+
+## 9. "Antes de empezar" diagnostic (Unidad 2, Spanish 4H and 4CP)
+
+A separate, no-AI activity at **`/antes`** (for example `https://…onrender.com/antes`). It does not touch the writing practice: it has its own tables and its own tab in the dashboard.
+
+- **Students** enter their name, course (4H or 4CP) and block. No class code. Refreshing the page in the same browser picks up where they left off; starting on a different computer starts a new attempt.
+- **Six parts plus a reflection** (about 35–45 minutes). First tries are saved on the server before any feedback appears and can never be changed. Practice retries, the Part 3 sentences, the Part 5 addition and the optional story revision are saved separately.
+- **Course differences**: 4H sees 18 confidence expressions and 12 vocabulary-in-context questions; 4CP sees 10 and 8. 4CP can open sentence starters right away; 4H starters unlock after a first try. Part 6 prompts and supports differ by course. Every time a student opens a support, it is recorded.
+- **Dashboard → "Antes de empezar" tab**: filter by course, block, completion and name; click a student for everything they wrote; Export CSV or download all responses. Categories stay separate (background, confidence, vocabulary in context, past meaning, story order, own story, reflection). There is no overall score and no AAPPL rating.
+- **Close / Reopen** in the tab stops or allows new starts.
+- Students can download their own summary at the end as a backup.

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antes de empezar: Puerto Rico y nuestras historias</title>
+<link rel="icon" href="hibiscus.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="antes.css">
+</head>
+<body class="antes">
+<header class="topbar">
+  <div class="brand"><img src="hibiscus.svg" alt="" width="26" height="26"> <span>Antes de empezar</span></div>
+  <div class="spacer"></div>
+  <span class="who" id="who"></span>
+  <button class="btn small hidden" id="summaryBtn" type="button">Download my summary</button>
+</header>
+<nav class="steps hidden" id="steps" aria-label="Parts of the activity"></nav>
+<main id="app" aria-live="polite"></main>
+<dialog id="confirm"><h2 id="confirmTitle"></h2><p id="confirmBody"></p><div class="row end"><button class="btn" id="confirmNo" type="button">Keep working</button><button class="btn primary" id="confirmYes" type="button">Submit</button></div></dialog>
+<script src="common.js"></script>
+<script src="antes.js"></script>
+</body>
+</html>

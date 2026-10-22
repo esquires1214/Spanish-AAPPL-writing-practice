@@ -1,6 +1,6 @@
 /* global h, api, fmtTime, STATUS_TEXT */
 const app = document.getElementById('app');
-let status = null, assignments = [], tab = 'work';
+let status = null, assignments = [], tab = location.hash === '#antes' ? 'antes' : 'work';
 const filters = { className: '', assignmentId: '', promptNo: '', status: '', student: '' };
 const ARC_OPTIONS = ['N-NE', 'N-SE', 'N-MM', 'N-MF', 'I-NE', 'I-SE', 'I-MM', 'I-MF', 'A-NE', 'A-SE', 'A-MM', 'A-MF', 'Insufficient evidence'];
 
@@ -31,12 +31,14 @@ const roundName = a => `${a.title}${a.round > 1 ? ` (round ${a.round})` : ''}`;
 function render() {
   const tabs = h('div', { class: 'tabs', role: 'tablist' },
     h('button', { type: 'button', 'aria-selected': String(tab === 'work'), onclick: () => { tab = 'work'; render(); } }, 'Student work'),
-    h('button', { type: 'button', 'aria-selected': String(tab === 'activities'), onclick: () => { tab = 'activities'; render(); } }, 'Activities & class codes'));
+    h('button', { type: 'button', 'aria-selected': String(tab === 'activities'), onclick: () => { tab = 'activities'; render(); } }, 'Activities & class codes'),
+    h('button', { type: 'button', 'aria-selected': String(tab === 'antes'), onclick: () => { tab = 'antes'; render(); } }, 'Antes de empezar'));
   const banner = [];
-  if (!status.aiConfigured) banner.push(h('p', { class: 'notice warn' }, 'The AI service is not configured on the server (ANTHROPIC_API_KEY). Students can still write and submit; feedback will show as pending until it is configured.'));
-  if (status.failed || status.pending) banner.push(h('p', { class: 'notice' }, `${status.pending} feedback request(s) pending, ${status.failed} waiting for retry. `,
+  if (tab !== 'antes' && !status.aiConfigured) banner.push(h('p', { class: 'notice warn' }, 'The AI service is not configured on the server (ANTHROPIC_API_KEY). Students can still write and submit; feedback will show as pending until it is configured.'));
+  if (tab !== 'antes' && (status.failed || status.pending)) banner.push(h('p', { class: 'notice' }, `${status.pending} feedback request(s) pending, ${status.failed} waiting for retry. `,
     h('button', { class: 'btn small', type: 'button', onclick: async () => { try { const r = await api('POST', '/api/teacher/retry-pending'); alert(`Retrying ${r.queued}.`); } catch (e) { alert(e.message); } } }, 'Retry now')));
   app.replaceChildren(tabs, ...banner, h('div', { id: 'tabBody' }));
+  if (tab === 'antes') return window.diagTab(document.getElementById('tabBody'));
   tab === 'work' ? workTab() : activitiesTab();
 }
 

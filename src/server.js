@@ -6,6 +6,7 @@ import { openDb } from './db.js';
 import { PROMPTS, CLASSES, DIRECTIONS, COURSE_TARGETS, LABEL, promptAsText } from './content.js';
 import { categoryLabel, RUBRIC_VERSION } from './rubric.js';
 import * as ev from './evaluator.js';
+import { mountDiagnostic } from './diagnostic.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -616,6 +617,9 @@ export function createApp(opts = {}) {
     res.set({ 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `attachment; filename="writing-and-feedback-${new Date().toISOString().slice(0, 10)}.html"` });
     res.send(page(body || '<p>No work matches these filters.</p>'));
   });
+
+  // "Antes de empezar" diagnostic (/antes) — separate tables and routes, no AI.
+  mountDiagnostic(app, { db, requireTeacher, limit, parseCookies, setCookie, clearCookie, hmac, cleanName, nameKey });
 
   app.use('/api/teacher', t);
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
